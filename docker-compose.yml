@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: poultrybase_app
+    command: python app/main.py
+    volumes:
+      - ./app:/app/app         # Mount your code for live updates
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=
+      - DB_NAME=poultrydb
+    depends_on:
+      - db
+    tty: true                 # Keeps container running for interactive CLI
+
+  db:
+    image: mysql:8.0
+    container_name: poultrybase_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 
+      MYSQL_DATABASE: poultrydb
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql  # Persist DB data
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: poultrybase_phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD:
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+
+
+
