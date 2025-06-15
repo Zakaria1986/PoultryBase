@@ -10,7 +10,7 @@ services:
     environment:
       - DB_HOST=db
       - DB_USER=root
-      - DB_PASS=
+      - DB_PASS= root
       - DB_NAME=poultrydb
     depends_on:
       - db
@@ -21,7 +21,7 @@ services:
     container_name: poultrybase_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: poultrydb
     ports:
       - "3306:3306"
@@ -34,9 +34,9 @@ services:
     restart: always
     ports:
       - 8080:80
-    environment:
+    environment: #http://localhost:8080/index.php?route=
       PMA_HOST: db
-      MYSQL_ROOT_PASSWORD:
+      MYSQL_ROOT_PASSWORD: root  #root
     depends_on:
       - db
 
