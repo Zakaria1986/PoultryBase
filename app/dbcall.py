@@ -41,3 +41,28 @@ class Db_connection:
         except mysql.connector.Error as err:
             print("❌ Query error:", err)
             return None
+        
+    def add_data(self, addNewRecord):
+        conn = self.connect()
+        if not conn:
+            print("😢 Cannot fetch data without a connection.")
+            return None
+        try:
+            cursor = conn.cursor(dictionary=True)
+
+            sql = "INSERT INTO chickens (name) VALUES (%s)"
+            # val = ("John", "Highway 21")
+            cursor.execute(sql, addNewRecord)
+            conn.commit()
+            print("✅ Record added successfully:", cursor.rowcount)
+            last_id = cursor.lastrowid
+            print("Last inserted ID:", last_id)  # Debugging line to check the last inserted ID
+            # Return the last inserted ID
+            # Fetch the last inserted ID
+
+            cursor.close()
+            conn.close()
+            return last_id            
+        except mysql.connector.Error as err:
+            print("❌ Query error:", err)
+            return None
