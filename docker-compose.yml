@@ -4,49 +4,46 @@ services:
   app:
     build: .
     container_name: poultrybase_app
-    command: python app/main.py
-
+    command: python main.py
     environment:
       - DB_HOST=db
       - DB_USER=root
       - DB_PASS=root
       - DB_NAME=poultrydb
-      - DISPLAY=${DISPLAY}  # 👈 Enables GUI
-
+      # Optional: remove this if you don’t need Tkinter/XQuartz
+      # - DISPLAY=host.docker.internal:0
     volumes:
-    - ./app:/app/app                   # Mount your code for live updates
-    - /tmp/.X11-unix:/tmp/.X11-unix    # X11 socket for GUI display
+      - ./app:/app
     depends_on:
       - db
-      
-    tty: true                 # Keeps container running for interactive CLI
+    ports:
+      - "5000:5000"   # expose Flask app on localhost:5000
+    tty: true
 
   db:
     image: mysql:8.0
     container_name: poultrybase_db
     restart: always
-    environment: # access database in docker evn: mysql -u root -p -h 127.0.0.1 -P 3306  
+    environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: poultrydb
     ports:
       - "3306:3306"
     volumes:
-      - db_data:/var/lib/mysql  # Persist DB data
+      - db_data:/var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: poultrybase_phpmyadmin
     restart: always
     ports:
-      - 8080:80
-    environment: #http://localhost:8080/index.php?route=
+      - "8080:80"
+    environment:
       PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: root  #root
+      PMA_USER: root
+      PMA_PASSWORD: root
     depends_on:
       - db
 
 volumes:
   db_data:
-
-
-

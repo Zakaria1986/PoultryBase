@@ -1,28 +1,26 @@
-# Python base image
+# Use Python 3.11 slim base image
 FROM python:3.11-slim
 
-# ✅ Install system packages for GUI (Tkinter) and X11 support
-RUN apt-get update && apt-get install -y \
-    # Tkinter GUI support  
-    python3-tk \ 
-    # X11 library to communicate with host display       
-    libx11-6 \  
-    # Clean up to keep image size small        
-    && apt-get clean     # Clean up to keep image size small
+# Prevent interactive prompts during install
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Set the working directory inside the container
+# Install build-essential for compiling any dependencies if needed
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# ✅ Copy Python dependencies file and install
+# Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your code
-COPY app/ ./app/
+# Copy project code
+COPY . .
 
-# Set environment variable for Python
+# Environment settings
 ENV PYTHONUNBUFFERED=1
 
-# Command to run your app
-CMD ["python", "app/main.py"]
-
+# Run the main app
+CMD ["python", "main.py"]
