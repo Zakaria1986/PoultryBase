@@ -65,3 +65,19 @@ class Db_connection:
         except mysql.connector.Error as err:
             print("❌ Query error:", err)
             return None
+        
+    def delete_data(self, chicken_id):
+        conn = self.connect()
+        try:
+            cursor = conn.cursor()
+            sql = "DELETE FROM chickens WHERE id = %s"
+            cursor.execute(sql, (chicken_id,))
+            conn.commit()
+            print(f"✅ Chicken with ID {chicken_id} deleted.")
+            return True
+        except mysql.connector.Error as err:
+            print("❌ Error deleting chicken:", err)
+            return False
+        finally:
+            cursor.close()
+            conn.close()
