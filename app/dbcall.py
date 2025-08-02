@@ -59,7 +59,6 @@ class Db_connection:
             print("Last inserted ID:", last_id)  # Debugging line to check the last inserted ID
             # Return the last inserted ID
             # Fetch the last inserted ID
-
             cursor.close()
             conn.close()
             return last_id            

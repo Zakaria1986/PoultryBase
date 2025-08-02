@@ -1,16 +1,21 @@
-<!-- app/templates/index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <title>PoultryBase</title>
+        <meta charset="UTF-8">
+        <title>Poultry Base</title>
     </head>
     <body>
-        <h1>Chicken Records</h1>
+        <h1>Welcome to the Poultry Base 🐔</h1>
+
+        {% if chickens %}
+        <p>Total Chickens in database: {{ chickens|length }}</p>
         <ul>
-            <!-- {% for chicken in chickens %}
-            <li>{{ chicken.name }} - {{ chicken.breed }}</li>
-            {% endfor %} -->
-            <h1>Hello, its working.</h1>
+            {% for chicken in chickens %}
+            <li>ID: {{ chicken.id }} - Name: {{ chicken.name }}</li>
+            {% endfor %}
         </ul>
+        {% else %}
+        <p>⚠️ No data found.</p>
+        {% endif %}
     </body>
 </html>
