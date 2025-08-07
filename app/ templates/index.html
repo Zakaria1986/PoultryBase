@@ -1,21 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
     <head>
-        <meta charset="UTF-8">
-        <title>Poultry Base</title>
+        <title>Chickens</title>
     </head>
     <body>
-        <h1>Welcome to the Poultry Base 🐔</h1>
+        <h1>🐔 Chickens in Database</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flashes">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
 
         {% if chickens %}
-        <p>Total Chickens in database: {{ chickens|length }}</p>
         <ul>
             {% for chicken in chickens %}
-            <li>ID: {{ chicken.id }} - Name: {{ chicken.name }}</li>
+            <li>
+                ID: {{ chicken.id }} — Name: {{ chicken.name }}
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="id" value="{{ chicken.id }}">
+                    <input type="hidden" name="csrf_token"
+                        value="{{ csrf_token() }}">
+                    <button type="submit">Delete</button>
+                </form>
+                <a
+                    href="{{ url_for('update_chicken', chicken_id=chicken.id) }}">Edit</a>
+            </li>
             {% endfor %}
         </ul>
         {% else %}
-        <p>⚠️ No data found.</p>
+        <p>⚠️ No chickens found.</p>
         {% endif %}
     </body>
 </html>
