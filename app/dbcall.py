@@ -61,7 +61,7 @@ class Db_connection:
             # Fetch the last inserted ID
             cursor.close()
             conn.close()
-            return last_id            
+            # return print(last_id)         
         except mysql.connector.Error as err:
             print("❌ Query error:", err)
             return None
@@ -81,3 +81,21 @@ class Db_connection:
         finally:
             cursor.close()
             conn.close()
+
+
+    def update_data(self, chicken_id, new_name):
+        conn = self.connect()
+        try:
+            cursor = conn.cursor()
+            sql = "UPDATE chickens SET name = %s WHERE id = %s"
+            cursor.execute(sql, (new_name, chicken_id))
+            conn.commit()
+        except mysql.connector.Error as err:
+            error_msg = f"Database error: {err}"
+            print(f"❌ {error_msg}")
+            conn.rollback()
+            return False, error_msg
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()

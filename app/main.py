@@ -41,11 +41,13 @@ def chickens():
 
     template = """
     <h1>🐔 Chickens in Database</h1>
+     <nav><a href="{{ url_for('add_chicken') }}" class="button">➕ Add New Chicken</a></nav>
     {% if chickens %}
-        <ul>
+        <ul>   
         {% for chicken in chickens %}
             <li>
                 ID: {{ chicken.id }} — Name: {{ chicken.name }}
+                <a href="{{ url_for('editForm', chicken_id=chicken.id) }}" class="button">✏️ Edit</a>
                 <form method="POST" style="display:inline;">
                     <input type="hidden" name="id" value="{{ chicken.id }}">
                     <button type="submit">Delete</button>
@@ -57,7 +59,7 @@ def chickens():
         <p>⚠️ No chickens found.</p>
     {% endif %}
     """
-    return render_template_string(template, chickens=results)
+    return render_template_string(template, chickens=chickens)
 
 
 @app.route("/add", methods=["GET", "POST"])
@@ -66,18 +68,10 @@ def add_chicken():
         db = Db_connection()
         chicken_name = request.form.get("name")
         if chicken_name:
-            try:
-                new_id = db.add_data((chicken_name,))
-                db.close()
-                flash(f"✅ Successfully added chicken with ID {new_id}", "success")
-                return redirect(url_for('chickens'))
-            except Exception as e:
-                db.close()
-                flash(f"Database error: {str(e)}", "error")
-                # Continue to show the form with error message
-    
+            new_id = db.add_data((chicken_name,))
+
     # GET request or failed POST - show the form
-    add_form = """
+    add_form = """ 
     <!DOCTYPE html>
     <html>
     <head>
@@ -99,11 +93,99 @@ def add_chicken():
             <input type="text" id="name" name="name" required>
             <button type="submit">Add Chicken</button>
         </form>
-        <a href="{{ url_for('chickens') }}">Back to List</a>
+        <a href="{{ url_for('chickens') }}">Home</a>
     </body>
     </html>
     """
     return render_template_string(add_form)
+
+
+@app.route("/edit/<int:chicken_id>", methods=["GET", "POST"])
+def editForm(chicken_id):
+    db = Db_connection()
+    result = db.fetch_data(f"SELECT * FROM chickens WHERE id = {chicken_id}")
+    chicken_id = chicken_id
+    if request.method == "POST":
+        # Get only the name from form data
+        new_name = request.form.get("name").strip()
+        # Update using the URL parameter
+        success = db.update_data(chicken_id, new_name)
+        
+    template_str = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{% if chicken %}Update Chicken #{{ chicken.id }}{% else %}Error{% endif %}</title>
+            <style>
+                .alert { padding: 10px; margin: 10px 0; }
+                .alert-error { background: #f2dede; color: #a94442; }
+                form { margin: 20px; padding: 20px; border: 1px solid #ddd; }
+            </style>
+        </head>
+        <body>
+            {% if chicken %}
+                <h1>Update Chicken #{{ chicken.id }}</h1>
+                <form method="POST">
+                    <div>
+                        <label>Name: 
+                            <input type="text" name="name" value="{{ chicken.name }}" required>
+                        </label>
+                    </div>
+                    <button type="submit">Update</button>
+                    <a href="{{ url_for('chickens') }}">Cancel</a>
+                </form>
+            {% else %}
+                <div class="alert alert-error">
+                    Chicken not found! <a href="{{ url_for('chickens') }}">Back to list</a>
+                </div>
+            {% endif %}
+            
+            {# Flash messages #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </body>
+        </html>
+        """    
+    return render_template_string(template_str, chicken=result)
+
+
+
+# @app.route("/update/<int:chicken_id>", methods=["GET", "POST"])
+# def update_chicken(chicken_id):  # ID comes from URL only
+#     db = Db_connection()
+    
+#     if request.method == "POST":
+#         # Get only the name from form data
+#         new_name = request.form.get("name").strip()
+        
+#         # Update using the URL parameter
+#         success = db.update_data(chicken_id, new_name)
+#         if success:
+#             flash("Update successful", "success")
+    
+#     # GET request - show form
+#     chicken = db.fetch_data("SELECT * FROM chickens WHERE id = {chicken_id}")
+#     if not chicken:
+#         flash("Chicken not found", "error")
+#         return redirect(url_for('chickens'))
+    
+#     return render_template_string("""
+#         <form method="POST">
+#             <h2>Update Chicken #{{ chicken.id }}</h2>
+#             <label>Name: 
+#                 <input type="text" name="name" value="{{ chicken.name }}" required>
+#             </label>
+#             <button type="submit">Update</button>
+#             <a href="{{ url_for('chickens') }}">Cancel</a>
+#         </form>
+        
+#     """, chicken=chicken)
+    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
