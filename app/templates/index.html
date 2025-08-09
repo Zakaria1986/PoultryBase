@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chickens</title>
+    </head>
+    <body>
+        <h1>🐔 Chickens in Database</h1>
+        <nav><a href="{{ url_for('add_chicken') }}" class="button">➕ Add New
+                Chicken</a></nav>
+        {% if chickens %}
+        <ul>
+            {% for chicken in chickens %}
+            <li>
+                ID: {{ chicken.id }} — Name: {{ chicken.name }}
+                <a href="{{ url_for('editForm', chicken_id=chicken.id) }}"
+                    class="button">✏️ Edit</a>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="id" value="{{ chicken.id }}">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>⚠️ No chickens found.</p>
+        {% endif %}
+    </body>
+</html>

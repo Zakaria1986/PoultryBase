@@ -1,0 +1,44 @@
+<!-- templates/update.html -->
+<!-- templates/update.html -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% if chicken %}Update Chicken #{{ chicken.id }}{% else %}Error{%
+            endif %}</title>
+        <style>
+                .alert { padding: 10px; margin: 10px 0; }
+                .alert-error { background: #f2dede; color: #a94442; }
+                .alert-success { background: #dff0d8; color: #3c763d; }
+                form { margin: 20px; padding: 20px; border: 1px solid #ddd; }
+            </style>
+    </head>
+    <body>
+        {% if chicken %}
+        <h1>Update Chicken #{{ chicken.id }}</h1>
+        <form method="POST">
+            <div>
+                <label>Name:
+                    <input type="text" name="name" value="{{ chicken.name }}"
+                        required>
+                </label>
+            </div>
+            <button type="submit">Update</button>
+            <a href="{{ url_for('chickens') }}">Cancel</a>
+        </form>
+        {% else %}
+        <div class="alert alert-error">
+            Chicken not found! <a href="{{ url_for('chickens') }}">Back to
+                list</a>
+        </div>
+        {% endif %}
+
+        {# Flash messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </body>
+</html>
