@@ -2,22 +2,21 @@ version: "3.8"
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: poultrybase_app
-    command: python main.py
     environment:
       - DB_HOST=db
       - DB_USER=root
       - DB_PASS=root
       - DB_NAME=poultrydb
-      # Optional: remove this if you don’t need Tkinter/XQuartz
-      # - DISPLAY=host.docker.internal:0
+    ports:
+      - "5000:5000"
     volumes:
       - ./app:/app
     depends_on:
       - db
-    ports:
-      - "5000:5000"   # expose Flask app on localhost:5000
     tty: true
 
   db:

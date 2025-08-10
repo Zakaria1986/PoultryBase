@@ -3,99 +3,121 @@ import mysql.connector
 
 class Db_connection:
     def __init__(self, host='db', user='root', password='root', database='poultrydb'):
+        # Get credentials from environment variables, with defaults for fallback/testing
         self.host = os.getenv('DB_HOST', host)
         self.user = os.getenv('DB_USER', user)
         self.password = os.getenv('DB_PASS', password)
         self.database = os.getenv('DB_NAME', database)
+        self.connection = None
+        self.cursor = None
 
     def connect(self):
         try:
-            conn = mysql.connector.connect(
+            self.connection = mysql.connector.connect(
                 host=self.host,
                 user=self.user,
                 password=self.password,
                 database=self.database
             )
-            if conn.is_connected():
-                print("✅ Successfully connected to the database:", conn.database)
-                return conn
-            else:
-                print("⚠️ Connection failed after attempt.")
-                return None
+            self.cursor = self.connection.cursor(dictionary=True)
+            print("✅ Successfully connected to the database:", self.database)
+            return True
         except mysql.connector.Error as err:
-            print("❌ Error connecting to database:", err)
-            return None
+            print(f"❌ Error connecting to database: {err}")
+            self.connection = None # Ensure connection is None if failed
+            self.cursor = None     # Ensure cursor is None if failed
+            return False
 
-    def fetch_data(self, query):
-        conn = self.connect()
-        if not conn:
-            print("😢 Cannot fetch data without a connection.")
+    def close_connection(self):
+        if self.cursor:
+            self.cursor.close()
+        if self.connection and self.connection.is_connected():
+            self.connection.close()
+            print("Connection closed.")
+
+    def execute_query(self, query, params=None):
+        if not self.connect(): # Connect on demand
+            return False
+        try:
+            if params:
+                self.cursor.execute(query, params)
+            else:
+                self.cursor.execute(query)
+            self.connection.commit()
+            return True
+        except mysql.connector.Error as err:
+            print(f"❌ Query error: {err}")
+            self.connection.rollback()
+            return False
+        finally:
+            self.close_connection() # Close connection after query
+
+    def fetch_data(self, query, params=None):
+        if not self.connect(): # Connect on demand
             return None
         try:
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            cursor.close()
-            conn.close()
+            if params:
+                self.cursor.execute(query, params)
+            else:
+                self.cursor.execute(query)
+            rows = self.cursor.fetchall()
             return rows
         except mysql.connector.Error as err:
-            print("❌ Query error:", err)
+            print(f"❌ Query error: {err}")
             return None
-        
-    def add_data(self, addNewRecord):
-        conn = self.connect()
-        if not conn:
-            print("😢 Cannot fetch data without a connection.")
-            return None
-        try:
-            cursor = conn.cursor(dictionary=True)
+        finally:
+            self.close_connection() # Close connection after fetching
 
-            sql = "INSERT INTO chickens (name) VALUES (%s)"
-            # val = ("John", "Highway 21")
-            cursor.execute(sql, addNewRecord)
-            conn.commit()
-            print("✅ Record added successfully:", cursor.rowcount)
-            last_id = cursor.lastrowid
-            print("Last inserted ID:", last_id)  # Debugging line to check the last inserted ID
-            # Return the last inserted ID
-            # Fetch the last inserted ID
-            cursor.close()
-            conn.close()
-            # return print(last_id)         
-        except mysql.connector.Error as err:
-            print("❌ Query error:", err)
+    def add_data(self, addNewRecord):
+        if not self.connect():
+            print("😢 Cannot add data without a connection.")
             return None
-        
-    def delete_data(self, chicken_id):
-        conn = self.connect()
         try:
-            cursor = conn.cursor()
+            sql = "INSERT INTO chickens (name) VALUES (%s)"
+            self.cursor.execute(sql, addNewRecord)
+            self.connection.commit()
+            last_id = self.cursor.lastrowid
+            print(f"✅ Record added successfully, ID: {last_id}")
+            return last_id
+        except mysql.connector.Error as err:
+            print(f"❌ Query error: {err}")
+            self.connection.rollback()
+            return None
+        finally:
+            self.close_connection()
+
+    def delete_data(self, chicken_id):
+        if not self.connect():
+            print("😢 Cannot delete data without a connection.")
+            return False
+        try:
             sql = "DELETE FROM chickens WHERE id = %s"
-            cursor.execute(sql, (chicken_id,))
-            conn.commit()
+            self.cursor.execute(sql, (chicken_id,))
+            self.connection.commit()
             print(f"✅ Chicken with ID {chicken_id} deleted.")
             return True
         except mysql.connector.Error as err:
-            print("❌ Error deleting chicken:", err)
+            print(f"❌ Error deleting chicken: {err}")
+            self.connection.rollback()
             return False
         finally:
-            cursor.close()
-            conn.close()
+            self.close_connection()
 
 
     def update_data(self, chicken_id, new_name):
-        conn = self.connect()
+        if not self.connect():
+            print("😢 Cannot update data without a connection.")
+            return False, "Database connection failed."
         try:
-            cursor = conn.cursor()
             sql = "UPDATE chickens SET name = %s WHERE id = %s"
-            cursor.execute(sql, (new_name, chicken_id))
-            conn.commit()
+            self.cursor.execute(sql, (new_name, chicken_id))
+            self.connection.commit()
+            print(f"✅ Chicken with ID {chicken_id} updated.")
+            return True, ""
         except mysql.connector.Error as err:
             error_msg = f"Database error: {err}"
             print(f"❌ {error_msg}")
-            conn.rollback()
+            self.connection.rollback()
             return False, error_msg
         finally:
-            if conn and conn.is_connected():
-                cursor.close()
-                conn.close()
+            self.close_connection()

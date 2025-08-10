@@ -1,8 +1,8 @@
+# .dockerignore
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .git
 .env
-Dockerfile
-docker-compose.yml
+# Remove Dockerfile and docker-compose.yml from here
